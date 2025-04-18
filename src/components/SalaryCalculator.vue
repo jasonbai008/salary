@@ -56,7 +56,7 @@
       </el-form-item>
       <el-form-item class="footer">
         <el-button type="primary" @click="onSubmit" icon="el-icon-edit">计算</el-button>
-        <el-button icon="el-icon-delete" @click="reset">重置</el-button>
+        <el-button icon="el-icon-refresh" @click="reset">重置</el-button>
       </el-form-item>
     </el-form>
     <!-- 结果展示 -->

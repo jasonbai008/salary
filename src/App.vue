@@ -10,9 +10,18 @@
       <el-tab-pane label="工资科普" name="1">
         <img src="./assets/img/tax.png" style="width: 100%" />
       </el-tab-pane>
+      <!-- 利率计算 -->
+      <el-tab-pane label="收益率计算" name="2">
+        <return-rate />
+      </el-tab-pane>
       <!-- 关于我 -->
-      <el-tab-pane label="关于我" name="2">
-        <img src="./assets/img/profile.png" class="me" title="1105843831" @click="vx" />
+      <el-tab-pane label="关于我" name="3">
+        <img
+          src="./assets/img/profile.png"
+          class="me"
+          title="1105843831"
+          @click="vx"
+        />
         <p>小白</p>
       </el-tab-pane>
     </el-tabs>
@@ -21,11 +30,13 @@
 
 <script>
 import SalaryCalculator from "./components/SalaryCalculator.vue";
+import ReturnRate from "./components/ReturnRate.vue";
 
 export default {
   name: "App",
   components: {
     SalaryCalculator,
+    ReturnRate,
   },
   data() {
     return {
