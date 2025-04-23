@@ -16,13 +16,15 @@
       </el-tab-pane>
       <!-- 关于我 -->
       <el-tab-pane label="关于我" name="3">
-        <img
-          src="./assets/img/profile.png"
-          class="me"
-          title="1105843831"
-          @click="vx"
-        />
-        <p>小白</p>
+        <div class="wrap">
+          <img
+            src="./assets/img/profile.png"
+            class="me"
+            title="1105843831"
+            @click="vx"
+          />
+          <p>小白</p>
+        </div>
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -80,6 +82,9 @@ body {
   }
 }
 #pane-2 p {
+  text-align: center;
+}
+.wrap {
   text-align: center;
 }
 </style>

@@ -3,28 +3,32 @@
     <h4>收益率计算公式：</h4>
     <p>每日收益 / n万 x 365 / 100</p>
     <h4>实际年化收益率：</h4>
-    <p><b>持有天数</b> = 当天日期 - 买入日期 - 2天</p>
+    <p><b>持有天数</b> = 当天日期 - 买入日期 - 1天</p>
     <p><b>实际年化收益率</b> = 总收益 / 持有天数 / n万 x 365 / 100</p>
     <h4>实际理财收益率：</h4>
     <el-form
       :inline="false"
       class="return-rate-form"
-      :label-position="top"
+      label-position="top"
       size="small"
     >
-      <el-form-item label="单笔理财金额（元）">
+      <el-form-item label="单笔理财金额">
         <el-input
           v-model="totalAmount"
           placeholder="请输入理财金额"
           type="number"
-        ></el-input>
+        >
+          <template slot="append">万元</template>
+        </el-input>
       </el-form-item>
-      <el-form-item label="单笔理财总收益（元）">
+      <el-form-item label="单笔理财总收益">
         <el-input
           v-model="totalEarnings"
           placeholder="请输入理财收益"
           type="number"
-        ></el-input>
+        >
+          <template slot="append">元</template>
+        </el-input>
       </el-form-item>
       <el-form-item label="买入日期">
         <el-date-picker
@@ -80,7 +84,7 @@ export default {
       const today = new Date();
       const purchaseDate = new Date(this.purchaseDate);
       const diffTime = Math.abs(today - purchaseDate);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) - 2; // 持有天数
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) - 1; // 持有天数
 
       if (diffDays <= 0) {
         this.$message.warning("持有天数必须大于0");
@@ -88,7 +92,7 @@ export default {
       }
 
       const totalEarnings = parseFloat(this.totalEarnings); // 使用用户输入的实际收益
-      const amount = parseFloat(this.totalAmount) / 10000; // 转换为n万
+      const amount = this.totalAmount; // n万
 
       // 实际年化收益率 = 总收益 / 持有天数 / n万 x 365 / 100
       const rate = (((totalEarnings / diffDays / amount) * 365) / 100).toFixed(
@@ -110,6 +114,12 @@ export default {
 
 <style scoped lang="scss">
 .returnRate-wrap {
+  h4 {
+    color: #127afb;
+  }
+  h4:first-child {
+    margin-top: 0;
+  }
   h4:not(:first-child) {
     margin: 30px 0 0;
   }
