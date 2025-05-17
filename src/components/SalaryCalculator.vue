@@ -39,7 +39,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="6">
-          <el-form-item label="工伤保险">
+          <el-form-item label="失业保险">
             <el-input v-model="form.ratio3">
               <template slot="append">%</template>
             </el-input>
@@ -60,7 +60,7 @@
       </el-form-item>
     </el-form>
     <!-- 结果展示 -->
-    <el-card size="small">
+    <el-card size="small" shadow="never">
       <p>平均每月税后工资：{{ result.salary }} 元</p>
       <p>平均每年税后工资：{{ result.salary * 12 }} 元</p>
       <el-divider></el-divider>
@@ -74,6 +74,22 @@
       <p>每月公积金入账：{{ result.gongjijin }} 元</p>
       <p>全年公积金入账：{{ result.gongjijin * 12 }} 元</p>
     </el-card>
+
+    <!-- 折叠面板：每月工资明细 -->
+    <el-collapse v-model="activeNames">
+      <el-collapse-item title="每月工资明细" name="1">
+        <el-table :data="monthlyDetails" stripe style="width: 100%">
+          <el-table-column prop="month" label="月份" align="center"></el-table-column>
+          <el-table-column prop="afterTax" label="税后收入" align="center"></el-table-column>
+          <el-table-column prop="taxRate" label="个税税率" align="center">
+            <template slot-scope="scope">
+              {{scope.row.taxRate}}%
+            </template>
+          </el-table-column>
+          <el-table-column prop="tax" label="个税金额" align="center"></el-table-column>
+        </el-table>
+      </el-collapse-item>
+    </el-collapse>
   </div>
 </template>
 
@@ -106,6 +122,8 @@ export default {
         tax: 0,
         taxRate: 0,
       },
+      activeNames: [], // 折叠面板默认收起
+      monthlyDetails: [], // 每月工资明细
     };
   },
   methods: {
@@ -120,32 +138,24 @@ export default {
       // 全年税前工资
       let totalSalary = this.form.salary * 12;
       // 全年公积金
-      let totalGongjijin =
-        ((this.form.gongjijin * this.form.ratio0) / 100) * 12;
+      let totalGongjijin = ((this.form.gongjijin * this.form.ratio0) / 100) * 12;
       // 全年三险金额
-      let totalWuxian =
-        ((this.form.wuxian *
-          (parseFloat(this.form.ratio1) +
-            parseFloat(this.form.ratio2) +
-            parseFloat(this.form.ratio3))) /
-          100 +
-          3) *
-        12;
+      let totalWuxian = ((this.form.wuxian * (parseFloat(this.form.ratio1) + parseFloat(this.form.ratio2) + parseFloat(this.form.ratio3))) / 100 + 3) * 12;
       // 全年专项扣除
       let totalKouchu = this.genKouchu() * 12;
       // 全年应纳税所得额
-      let beforeTax =
-        totalSalary - totalGongjijin - totalWuxian - baseFreeTax - totalKouchu;
+      let beforeTax = totalSalary - totalGongjijin - totalWuxian - baseFreeTax - totalKouchu;
       // 全年应缴个税
       let totalTax = this.genTax(beforeTax);
 
       // 全年税后工资/12
-      this.result.salary = parseInt(
-        (totalSalary - totalGongjijin - totalWuxian - totalTax) / 12
-      );
+      this.result.salary = parseInt((totalSalary - totalGongjijin - totalWuxian - totalTax) / 12);
       this.result.gongjijin = parseInt(totalGongjijin / 12) * 2;
       this.result.wuxian = parseInt(totalWuxian / 12);
       this.result.tax = parseInt(totalTax / 12);
+
+      // 计算每月工资明细
+      this.calculateMonthlyDetails();
     },
     // 计算全年所得税
     genTax(salaryBeforeTax) {
@@ -190,6 +200,74 @@ export default {
       }
       return kouchu;
     },
+    // 计算每月工资明细
+    calculateMonthlyDetails() {
+      this.monthlyDetails = [];
+
+      // 月度税前工资
+      const monthlySalary = this.form.salary;
+
+      // 月度三险一金
+      const monthlyGongjijin = (this.form.gongjijin * this.form.ratio0) / 100;
+      const monthlyWuxian = (this.form.wuxian * (parseFloat(this.form.ratio1) + parseFloat(this.form.ratio2) + parseFloat(this.form.ratio3))) / 100 + 3;
+
+      // 月度专项附加扣除
+      const monthlyKouchu = this.genKouchu();
+
+      // 累计应纳税所得额
+      let accumulatedTaxableIncome = 0;
+      // 累计已缴税额
+      let accumulatedTaxPaid = 0;
+
+      for (let month = 1; month <= 12; month++) {
+        // 当月累计应纳税所得额 = 累计收入 - 累计免税收入 - 累计专项扣除 - 累计专项附加扣除 - 累计依法确定的其他扣除
+        accumulatedTaxableIncome += monthlySalary - 5000 - monthlyGongjijin - monthlyWuxian - monthlyKouchu;
+
+        // 计算当月应缴税额
+        let currentMonthTax = 0;
+        let taxRate = 0;
+
+        if (accumulatedTaxableIncome <= 0) {
+          currentMonthTax = 0;
+          taxRate = 0;
+        } else if (accumulatedTaxableIncome <= 36000) {
+          currentMonthTax = accumulatedTaxableIncome * 0.03 - accumulatedTaxPaid;
+          taxRate = 3;
+        } else if (accumulatedTaxableIncome <= 144000) {
+          currentMonthTax = accumulatedTaxableIncome * 0.1 - 2520 - accumulatedTaxPaid;
+          taxRate = 10;
+        } else if (accumulatedTaxableIncome <= 300000) {
+          currentMonthTax = accumulatedTaxableIncome * 0.2 - 16920 - accumulatedTaxPaid;
+          taxRate = 20;
+        } else if (accumulatedTaxableIncome <= 420000) {
+          currentMonthTax = accumulatedTaxableIncome * 0.25 - 31920 - accumulatedTaxPaid;
+          taxRate = 25;
+        } else if (accumulatedTaxableIncome <= 660000) {
+          currentMonthTax = accumulatedTaxableIncome * 0.3 - 52920 - accumulatedTaxPaid;
+          taxRate = 30;
+        } else if (accumulatedTaxableIncome <= 960000) {
+          currentMonthTax = accumulatedTaxableIncome * 0.35 - 85920 - accumulatedTaxPaid;
+          taxRate = 35;
+        } else {
+          currentMonthTax = accumulatedTaxableIncome * 0.45 - 181920 - accumulatedTaxPaid;
+          taxRate = 45;
+        }
+
+        // 更新累计已缴税额
+        accumulatedTaxPaid += currentMonthTax;
+
+        // 当月税后收入
+        const afterTaxIncome = monthlySalary - monthlyGongjijin - monthlyWuxian - currentMonthTax;
+
+        // 添加到明细列表
+        this.monthlyDetails.push({
+          month: month + "月",
+          afterTax: parseInt(afterTaxIncome),
+          taxRate: taxRate,
+          tax: parseInt(currentMonthTax),
+        });
+      }
+    },
     reset() {
       this.form = {
         salary: "",
@@ -215,6 +293,7 @@ export default {
         tax: 0,
         taxRate: 0,
       };
+      this.monthlyDetails = [];
     },
   },
 };
@@ -237,6 +316,22 @@ export default {
   }
   .footer {
     margin: 25px 0;
+  }
+
+  // 折叠面板样式
+  .el-collapse {
+    margin-top: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+
+    .el-collapse-item__header {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .el-collapse-item__content {
+      font-size: 14px;
+    }
   }
 }
 .el-input::v-deep .el-input-group__append {
