@@ -1,21 +1,21 @@
 <template>
   <div id="app">
-    <el-tabs v-model="activeName">
+    <el-tabs v-model="activeName" @tab-click="handleTabClick">
       <!-- 工资计算 -->
-      <el-tab-pane label="工资计算" name="0">
+      <el-tab-pane label="工资计算" name="salary">
         <!-- 工资计算器 -->
         <SalaryCalculator />
       </el-tab-pane>
       <!-- 工资科普 -->
-      <el-tab-pane label="工资科普" name="1">
+      <el-tab-pane label="工资科普" name="pic">
         <img src="./assets/img/tax.png" style="width: 100%" />
       </el-tab-pane>
       <!-- 利率计算 -->
-      <el-tab-pane label="收益率计算" name="2">
+      <el-tab-pane label="收益率计算" name="rate">
         <return-rate />
       </el-tab-pane>
       <!-- 关于我 -->
-      <el-tab-pane label="关于我" name="3">
+      <el-tab-pane label="关于我" name="about">
         <div class="wrap">
           <img
             src="./assets/img/profile.png"
@@ -42,10 +42,35 @@ export default {
   },
   data() {
     return {
-      activeName: "0",
+      activeName: "salary",
     };
   },
+  // 组件挂载时检查URL参数
+  mounted() {
+    this.initTabFromUrl();
+  },
   methods: {
+    // 初始化选项卡：从URL参数中获取tab值
+    initTabFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabFromUrl = urlParams.get('tab');
+      
+      // 如果URL中有tab参数且值有效，则使用URL中的值
+      if (tabFromUrl && ['salary', 'pic', 'rate', 'about'].includes(tabFromUrl)) {
+        this.activeName = tabFromUrl;
+      }
+    },
+    
+    // 处理选项卡点击事件：更新URL参数
+    handleTabClick(tab) {
+      const tabName = tab.name;
+      
+      // 更新URL参数，不刷新页面
+      const url = new URL(window.location);
+      url.searchParams.set('tab', tabName);
+      window.history.pushState({}, '', url);
+    },
+    
     vx() {
       alert("1105843831");
     },
